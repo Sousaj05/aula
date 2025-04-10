@@ -2,85 +2,161 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Cadastro de Interesse</title>
+  <title>Calculadora de Materiais</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: rgb(128, 128, 255);
+      padding: 30px;
+      background-color: #96befa;
     }
-
-    h1 {
-        text-align: center;
-    }
-
-    div {
-        background-color: white;
-        padding: 10px;
-        width: 550px;
-        border-radius: 10px;
-        margin: auto;
-    }
-    input, button {
-      display: block;
-      margin-bottom: 15px;
-      padding: 8px;
-      width: 300px;
-    }
-    .mensagem-final {
-      font-size: 20px;
-      margin-top: 30px;
+    h2 {
       color: #333;
     }
-    .mensagem-final .sucesso {
-      display: flex;
-      align-items: center;
-      font-size: 22px;
-      margin-bottom: 15px;
+    label, input, select, button {
+      display: block;
+      margin: 10px 0;
+      border-radius: 10px;
     }
-    .mensagem-final .sucesso .icone {
-      font-size: 26px;
-      margin-right: 10px;
+    input, select {
+      padding: 8px;
+      width: 220px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #resultado {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: white;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
-  <div id="formulario">
-    <h1>Formulário de Cadastro</h1>
 
-    <label>Nome:</label>
-    <input type="text" id="nome" placeholder="Digite seu nome">
+  <h2>Calculadora de Materiais de Construção</h2>
 
-    <label>Telefone:</label>
-    <input type="text" id="telefone" placeholder="Digite seu telefone">
+  <label for="tipo">Tipo de cálculo:</label>
+  <select id="tipo" onchange="atualizarOpcoes()">
+    <option value="parede">Parede (m²)</option>
+    <option value="concreto">Concreto (m³)</option>
+  </select>
 
-    <label>Email:</label>
-    <input type="email" id="email" placeholder="Digite seu e-mail">
-
-    <label>Interesse:</label>
-    <input type="text" id="interesse" placeholder="Digite seu interesse">
-
-    <button onclick="enviarCadastro()">Enviar Cadastro</button>
+  <div id="opcoesAdicionais">
+    <!-- Opções extras serão inseridas aqui dinamicamente -->
   </div>
 
+  <label for="valor">Quantidade (m² ou m³):</label>
+  <input type="number" id="valor" step="0.1" value="10">
+
+  <label for="preco">Calcular custo? (R$):</label>
+  <select id="calcularCusto">
+    <option value="nao">Não</option>
+    <option value="sim">Sim</option>
+  </select>
+
+  <button onclick="calcularMateriais()">Calcular</button>
+
+  <div id="resultado"></div>
+
   <script>
-    function enviarCadastro() {
-      const nome = document.getElementById('nome').value;
-      const telefone = document.getElementById('telefone').value;
-      const email = document.getElementById('email').value;
-      const interesse = document.getElementById('interesse').value;
+    function atualizarOpcoes() {
+      const tipo = document.getElementById('tipo').value;
+      const opcoesDiv = document.getElementById('opcoesAdicionais');
+      opcoesDiv.innerHTML = '';
 
-      const mensagem = `Olá ${nome}, obrigado por seu interesse em nosso novo lançamento de ${interesse}! Em breve, enviaremos mais detalhes para o e-mail ${email}.`;
+      if (tipo === 'parede') {
+        opcoesDiv.innerHTML = `
+          <label for="tijolo">Tipo de tijolo:</label>
+          <select id="tijolo">
+            <option value="ceramico">Cerâmico (28/m²)</option>
+            <option value="concreto">Concreto (22/m²)</option>
+            <option value="ecologico">Ecológico (30/m²)</option>
+          </select>
+        `;
+      } else if (tipo === 'concreto') {
+        opcoesDiv.innerHTML = `
+          <label for="traco">Traço do concreto:</label>
+          <select id="traco">
+            <option value="leve">Leve (1:3:5)</option>
+            <option value="normal" selected>Normal (1:2:3)</option>
+            <option value="forte">Forte (1:1.5:2.5)</option>
+          </select>
+        `;
+      }
+    }
 
-      document.body.innerHTML = `
-        <div class="mensagem-final">
-          <div class="sucesso">
-            <span>Cadastro realizado com sucesso! <span class="icone">✔️</span></span>
-          </div>
-          <p>${mensagem}</p>
-        </div>
-      `;
+    atualizarOpcoes(); // chama ao iniciar
+
+    function calcularMateriais() {
+      const tipo = document.getElementById('tipo').value;
+      const valor = parseFloat(document.getElementById('valor').value);
+      const calcularCusto = document.getElementById('calcularCusto').value === 'sim';
+      let resultado = '';
+
+      if (tipo === 'parede') {
+        const tipoTijolo = document.getElementById('tijolo').value;
+        const consumoTijolo = {
+          ceramico: 28,
+          concreto: 22,
+          ecologico: 30
+        };
+
+        const argamassaM3PorM2 = 0.02;
+        const precoTijolo = 1.2;     // R$ por unidade
+        const precoArgamassa = 350;  // R$ por m³
+
+        const totalTijolos = valor * consumoTijolo[tipoTijolo];
+        const totalArgamassa = valor * argamassaM3PorM2;
+
+        resultado += `<p><strong>Total de tijolos:</strong> ${totalTijolos.toFixed(0)} un</p>`;
+        resultado += `<p><strong>Argamassa:</strong> ${totalArgamassa.toFixed(2)} m³</p>`;
+
+        if (calcularCusto) {
+          const custoTotal = (totalTijolos * precoTijolo) + (totalArgamassa * precoArgamassa);
+          resultado += `<p><strong>Custo estimado:</strong> R$ ${custoTotal.toFixed(2)}</p>`;
+        }
+
+      } else if (tipo === 'concreto') {
+        const traco = document.getElementById('traco').value;
+
+        const tracos = {
+          leve:   { cimento: 6, areia: 0.45, brita: 0.75, agua: 160 },
+          normal: { cimento: 7, areia: 0.5,  brita: 0.8,  agua: 180 },
+          forte:  { cimento: 8.5, areia: 0.55, brita: 0.85, agua: 200 }
+        };
+
+        const precoCimento = 35; // saco 50kg
+        const precoAreia = 180;  // m³
+        const precoBrita = 160;  // m³
+
+        const dados = tracos[traco];
+
+        const totalCimento = valor * dados.cimento;
+        const totalAreia = valor * dados.areia;
+        const totalBrita = valor * dados.brita;
+        const totalAgua = valor * dados.agua;
+
+        resultado += `<p><strong>Cimento:</strong> ${totalCimento.toFixed(1)} sacos (50kg)</p>`;
+        resultado += `<p><strong>Areia:</strong> ${totalAreia.toFixed(2)} m³</p>`;
+        resultado += `<p><strong>Brita:</strong> ${totalBrita.toFixed(2)} m³</p>`;
+        resultado += `<p><strong>Água:</strong> ${totalAgua.toFixed(0)} litros</p>`;
+
+        if (calcularCusto) {
+          const custoTotal = (totalCimento * precoCimento) + 
+                             (totalAreia * precoAreia) + 
+                             (totalBrita * precoBrita);
+          resultado += `<p><strong>Custo estimado:</strong> R$ ${custoTotal.toFixed(2)}</p>`;
+        }
+      }
+
+      document.getElementById('resultado').innerHTML = resultado;
     }
   </script>
+
 </body>
 </html>
