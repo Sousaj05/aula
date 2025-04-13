@@ -33,6 +33,7 @@
     label {
       margin-top: 10px;
       font-weight: bold;
+      display: block;
     }
 
     input, select, button {
@@ -94,10 +95,16 @@
       <!-- Opções extras aqui -->
     </div>
 
-    <label for="valor">Quantidade (m² ou m³):</label>
-    <input type="number" id="valor" step="0.1" value="10">
+    <label for="valor">Area ou Volume:</label>
+    <input type="number" id="valor" step="0.1" value="10" placeholder="Ex: 10">
 
-    <label for="preco">Calcular custo? (R$):</label>
+    <label for="unidade">Unidade:</label>
+    <select id="unidade">
+      <option value="m2">m² (metro quadrado)</option>
+      <option value="m3">m³ (metro cúbico)</option>
+    </select>
+
+    <label for="calcularCusto">Calcular custo? (R$):</label>
     <select id="calcularCusto">
       <option value="nao">Não</option>
       <option value="sim">Sim</option>
@@ -112,6 +119,7 @@
     function atualizarOpcoes() {
       const tipo = document.getElementById('tipo').value;
       const opcoesDiv = document.getElementById('opcoesAdicionais');
+      const unidadeSelect = document.getElementById('unidade');
       opcoesDiv.innerHTML = '';
 
       if (tipo === 'parede') {
@@ -123,6 +131,7 @@
             <option value="ecologico">Ecológico (30/m²)</option>
           </select>
         `;
+        unidadeSelect.value = 'm2';
       } else if (tipo === 'concreto') {
         opcoesDiv.innerHTML = `
           <label for="traco">Traço do concreto:</label>
@@ -132,6 +141,7 @@
             <option value="forte">Forte (1:1.5:2.5)</option>
           </select>
         `;
+        unidadeSelect.value = 'm3';
       }
     }
 
@@ -140,8 +150,25 @@
     function calcularMateriais() {
       const tipo = document.getElementById('tipo').value;
       const valor = parseFloat(document.getElementById('valor').value);
+      const unidade = document.getElementById('unidade').value;
       const calcularCusto = document.getElementById('calcularCusto').value === 'sim';
       let resultado = '';
+
+      if (isNaN(valor) || valor <= 0) {
+        document.getElementById('resultado').innerHTML = '<p style="color:red;">Por favor, insira uma quantidade válida.</p>';
+        return;
+      }
+
+      // Validação de unidade correta para o tipo
+      if ((tipo === 'parede' && unidade !== 'm2') || (tipo === 'concreto' && unidade !== 'm3')) {
+        document.getElementById('resultado').innerHTML = `
+          <p style="color:red;">Unidade incompatível com o tipo de cálculo selecionado. 
+          Use <strong>m²</strong> para parede e <strong>m³</strong> para concreto.</p>`;
+        return;
+      }
+
+      resultado += `<p><strong>Tipo de cálculo:</strong> ${tipo === 'parede' ? 'Parede (m²)' : 'Concreto (m³)'}</p>`;
+      resultado += `<p><strong>Quantidade:</strong> ${valor} ${unidade}</p>`;
 
       if (tipo === 'parede') {
         const tipoTijolo = document.getElementById('tijolo').value;
